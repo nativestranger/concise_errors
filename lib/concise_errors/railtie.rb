@@ -1,0 +1,71 @@
+# frozen_string_literal: true
+
+require "rails/railtie"
+
+module ConciseErrors
+  # Integrates the middleware with a host Rails application.
+  class Railtie < Rails::Railtie
+    config.concise_errors = ConciseErrors.configuration
+
+    initializer "concise_errors.configure_defaults" do |app|
+      ConciseErrors.configure do |config|
+        apply_framework_defaults(config, app)
+      end
+    end
+
+    initializer "concise_errors.swap_middleware" do |app|
+      next unless ConciseErrors.configuration.enabled?
+
+      stack = app.config.middleware
+      disable_web_console(stack)
+
+      begin
+        stack.swap ::ActionDispatch::DebugExceptions, ConciseErrors::DebugExceptions
+      rescue RuntimeError
+        stack.delete ::ActionDispatch::DebugExceptions
+        stack.use ConciseErrors::DebugExceptions
+      end
+    end
+
+    private
+
+    def apply_framework_defaults(config, app)
+      config.logger ||= detect_logger
+      config.application_root ||= detect_root(app)
+      config.format = detect_format if config.format == Configuration::DEFAULT_FORMAT
+      config.stack_trace_lines ||= Configuration::DEFAULT_STACK_LINES
+      config.cleaner ||= detect_cleaner
+    end
+
+    def detect_logger
+      return Rails.logger if defined?(Rails) && Rails.respond_to?(:logger)
+
+      require "logger"
+      Logger.new($stdout)
+    end
+
+    def detect_root(app)
+      return Rails.root.to_s if defined?(Rails) && Rails.respond_to?(:root) && Rails.root
+      return unless app.respond_to?(:root) && app.root
+
+      app.root.to_s
+    end
+
+    def detect_cleaner
+      Rails.backtrace_cleaner if defined?(Rails) && Rails.respond_to?(:backtrace_cleaner)
+    end
+
+    def detect_format
+      configured = ENV.fetch("CONCISE_ERRORS_FORMAT", nil)&.strip
+      return configured.downcase.to_sym if configured && %w[text html].include?(configured.downcase)
+
+      :html
+    end
+
+    def disable_web_console(stack)
+      return unless defined?(WebConsole::Middleware)
+
+      stack.delete(WebConsole::Middleware)
+    end
+  end
+end

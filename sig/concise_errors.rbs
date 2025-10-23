@@ -1,0 +1,35 @@
+module ConciseErrors
+  VERSION: String
+
+  class Configuration
+    DEFAULT_FORMAT: Symbol
+    @format: Symbol
+    @stack_trace_lines: Integer?
+    @enabled: bool
+    @logger: untyped
+    @application_root: String?
+    @cleaner: untyped
+
+    attr_accessor stack_trace_lines: Integer?
+    attr_accessor enabled: bool
+    attr_accessor logger: untyped
+    attr_accessor application_root: String?
+    attr_accessor cleaner: untyped
+
+    def initialize: () -> void
+    def format: () -> Symbol
+    def format=:(Symbol | String | nil) -> void
+    def enabled?: () -> bool
+    def reset!: () -> void
+  end
+
+  def self.configuration: () -> Configuration
+  def self.configure: () { (Configuration) -> void } -> void
+  def self.reset_configuration!: () -> void
+  def self.logger: () -> untyped
+  def self.logger=:(untyped) -> void
+  def self.application_root: () -> String?
+  def self.application_root=:(String?) -> void
+  def self.cleaner: () -> untyped
+  def self.cleaner=:(untyped) -> void
+end
