@@ -8,6 +8,7 @@ ConciseErrors swaps Rails’ `ActionDispatch::DebugExceptions` middleware with a
 - Optional single-file HTML view optimised for dark/light mode without external CSS.
 - Configurable backtrace depth with an omission indicator.
 - Automatic fallback to `text/plain` when the request is `xhr?` or clients negotiate non-HTML `Accept` headers.
+- HTML view includes a button to open Rails' full-featured error page.
 
 ## Installation
 
@@ -32,6 +33,7 @@ Rails.application.configure do
     cfg.enabled = true          # flip to false to restore the stock debug page
     cfg.application_root = Rails.root.to_s # optional: trim this prefix from traces
     cfg.logger = Rails.logger              # optional: reuse your preferred logger
+    cfg.full_error_param = "concise_errors_full" # optional: query param to trigger full page; set nil/"" to disable
   end
 end
 ```
@@ -39,6 +41,13 @@ end
 You can also steer the default format via `ENV["CONCISE_ERRORS_FORMAT"]` (`text` or `html`).
 
 ConciseErrors only affects the debug middleware (the screen you see when `config.consider_all_requests_local` is true). Production 500 pages continue to use whatever `ActionDispatch::ShowExceptions` is configured to serve.
+
+### Viewing the full Rails error page
+
+When rendering HTML, ConciseErrors shows a "View full Rails error page" button. Clicking it performs a same-origin request back to the same URL with the `concise_errors_full=1` flag (or your configured `full_error_param`). The original request method, CSRF token, and content type are preserved; for non-GET/HEAD requests the request body is replayed.
+
+- To disable the button entirely, set `config.concise_errors.full_error_param = nil` or `""`.
+- If Web Console is installed, the fallback will go through its middleware; otherwise Rails' stock `ActionDispatch::DebugExceptions` page is shown.
 
 ## Sample Output
 

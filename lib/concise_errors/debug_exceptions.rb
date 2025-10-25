@@ -10,6 +10,16 @@ module ConciseErrors
   # Replacement middleware that keeps the existing API while producing concise output.
   class DebugExceptions < ::ActionDispatch::DebugExceptions
     def call(env)
+      request = ActionDispatch::Request.new(env)
+
+      if web_console_request?(request)
+        return fallback_web_console.call(env)
+      end
+
+      if full_error_requested?(request)
+        return fallback_web_console.call(env)
+      end
+
       env["action_dispatch.backtrace_cleaner"] ||= ConciseErrors.configuration.cleaner
       super
     end
@@ -23,6 +33,32 @@ module ConciseErrors
 
     def logger(request)
       ConciseErrors.logger || super
+    end
+
+    def full_error_requested?(request)
+      flag = ConciseErrors.configuration.full_error_param
+      return false if flag.nil? || flag.to_s.empty?
+
+      request.query_parameters.key?(flag.to_s)
+    end
+
+    def web_console_request?(request)
+      return false unless defined?(WebConsole::Middleware)
+
+      mount_point = WebConsole::Middleware.mount_point
+      return false if mount_point.nil? || mount_point.empty?
+
+      request.path.start_with?(mount_point)
+    end
+
+    def fallback_debug_exceptions
+      @fallback_debug_exceptions ||= ::ActionDispatch::DebugExceptions.new(@app)
+    end
+
+    def fallback_web_console
+      return fallback_debug_exceptions unless defined?(WebConsole::Middleware)
+
+      @fallback_web_console ||= WebConsole::Middleware.new(fallback_debug_exceptions)
     end
   end
 end

@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    concise_errors (0.1.0)
+    concise_errors (0.2.0)
       actionpack (>= 6.1, < 9.0)
 
 GEM

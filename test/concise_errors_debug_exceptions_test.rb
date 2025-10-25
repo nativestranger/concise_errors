@@ -41,6 +41,17 @@ class ConciseErrorsDebugExceptionsTest < Minitest::Test
     refute_includes payload, "color-scheme"
   end
 
+  def test_html_output_includes_full_error_button
+    ConciseErrors.configure { |config| config.format = :html }
+
+    _status, _headers, body = middleware.call(build_env)
+
+    payload = response_body_string(body)
+
+    assert_includes payload, 'id="concise-errors-view-full"'
+    assert_includes payload, "concise_errors_full=1"
+  end
+
   def test_falls_back_to_text_for_xhr_requests
     ConciseErrors.configure { |config| config.format = :html }
 
@@ -81,6 +92,21 @@ class ConciseErrorsDebugExceptionsTest < Minitest::Test
     assert_includes payload, "./test/concise_errors_debug_exceptions_test.rb"
   end
 
+  def test_flagged_request_uses_fallback_handler
+    ConciseErrors.configure { |config| config.format = :html }
+
+    fallback_response = [599, { "content-type" => "text/plain" }, ["fallback"]]
+    env = build_env_for_path("/?concise_errors_full=1")
+
+    middleware.stub(:fallback_web_console, -> { ->(_env) { fallback_response } }) do
+      status, headers, body = middleware.call(env)
+
+      assert_equal fallback_response[0], status
+      assert_equal fallback_response[1], headers
+      assert_equal fallback_response[2], body
+    end
+  end
+
   private
 
   def middleware
@@ -94,8 +120,12 @@ class ConciseErrorsDebugExceptionsTest < Minitest::Test
   end
 
   def build_env(overrides = {})
+    build_env_for_path("/", overrides)
+  end
+
+  def build_env_for_path(path, overrides = {})
     Rack::MockRequest.env_for(
-      "/",
+      path,
       "HTTP_ACCEPT" => "text/html"
     ).merge(
       "action_dispatch.show_detailed_exceptions" => true,
