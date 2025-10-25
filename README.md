@@ -22,7 +22,7 @@ Run `bundle install` and restart your Rails server. ConciseErrors automatically 
 
 ## Configuration
 
-ConciseErrors ships with opinionated defaults — HTML output, no CSS, and Web Console middleware is automaticallyremoved in development — so simply installing the gem is enough. Override anything you need from `config/application.rb` or an environment-specific config:
+ConciseErrors ships with opinionated defaults — HTML output, no CSS, and Web Console middleware is automatically removed in development — so simply installing the gem is enough. Override anything you need from `config/application.rb` or an environment-specific config:
 
 ```ruby
 # config/environments/development.rb

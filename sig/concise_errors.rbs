@@ -9,12 +9,14 @@ module ConciseErrors
     @logger: untyped
     @application_root: String?
     @cleaner: untyped
+    @full_error_param: String?
 
     attr_accessor stack_trace_lines: Integer?
     attr_accessor enabled: bool
     attr_accessor logger: untyped
     attr_accessor application_root: String?
     attr_accessor cleaner: untyped
+    attr_accessor full_error_param: String?
 
     def initialize: () -> void
     def format: () -> Symbol
