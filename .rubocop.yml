@@ -8,3 +8,11 @@ Style/StringLiterals:
 
 Style/StringLiteralsInInterpolation:
   EnforcedStyle: double_quotes
+
+Metrics/ClassLength:
+  Exclude:
+    - "lib/concise_errors/formatter.rb"
+
+Metrics/MethodLength:
+  Exclude:
+    - "lib/concise_errors/formatter.rb"

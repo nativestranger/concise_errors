@@ -12,13 +12,9 @@ module ConciseErrors
     def call(env)
       request = ActionDispatch::Request.new(env)
 
-      if web_console_request?(request)
-        return fallback_web_console.call(env)
-      end
+      return fallback_web_console.call(env) if web_console_request?(request)
 
-      if full_error_requested?(request)
-        return fallback_web_console.call(env)
-      end
+      return fallback_web_console.call(env) if full_error_requested?(request)
 
       env["action_dispatch.backtrace_cleaner"] ||= ConciseErrors.configuration.cleaner
       super
