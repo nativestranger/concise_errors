@@ -13,14 +13,18 @@ module ConciseErrors
       end
     end
 
-    initializer "concise_errors.swap_middleware" do |app|
+    initializer "concise_errors.swap_middleware", before: :build_middleware_stack do |app|
       next unless ConciseErrors.configuration.enabled?
 
       stack = app.config.middleware
       disable_web_console(stack)
 
+      # Ensure ActionDispatch::DebugExceptions exists before trying to swap
+      stack.use ::ActionDispatch::DebugExceptions
+
       begin
         stack.swap ::ActionDispatch::DebugExceptions, ConciseErrors::DebugExceptions
+        stack.delete ::ActionDispatch::DebugExceptions
       rescue RuntimeError
         stack.delete ::ActionDispatch::DebugExceptions
         stack.use ConciseErrors::DebugExceptions
