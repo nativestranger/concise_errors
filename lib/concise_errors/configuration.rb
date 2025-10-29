@@ -6,7 +6,7 @@ module ConciseErrors
     DEFAULT_STACK_LINES = 10
     DEFAULT_FORMAT = :text
 
-    attr_accessor :stack_trace_lines, :enabled, :logger, :application_root, :cleaner, :full_error_param
+    attr_accessor :stack_trace_lines, :enabled, :logger, :application_root, :cleaner, :full_error_param, :enable_in_production
 
     def initialize
       reset!
@@ -18,6 +18,10 @@ module ConciseErrors
 
     def enabled?
       enabled != false
+    end
+
+    def enable_in_production?
+      enable_in_production == true
     end
 
     def format=(value)
@@ -32,6 +36,7 @@ module ConciseErrors
       @application_root = nil
       @cleaner = nil
       @full_error_param = "concise_errors_full"
+      @enable_in_production = false
     end
   end
 end

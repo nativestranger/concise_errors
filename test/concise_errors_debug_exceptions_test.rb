@@ -36,19 +36,20 @@ class ConciseErrorsDebugExceptionsTest < Minitest::Test
 
     payload = response_body_string(body)
 
-    assert_includes payload, "<pre>"
-    assert_includes payload, "RuntimeError: bang"
-    refute_includes payload, "color-scheme"
+    assert_includes payload, "<!DOCTYPE html>"
+    assert_includes payload, "<h1>RuntimeError</h1>"
+    assert_includes payload, "bang"
+    assert_includes payload, "Stack Trace"
   end
 
-  def test_html_output_includes_full_error_button
+  def test_html_output_includes_full_error_button_in_dev
     ConciseErrors.configure { |config| config.format = :html }
 
     _status, _headers, body = middleware.call(build_env)
 
     payload = response_body_string(body)
 
-    assert_includes payload, 'id="concise-errors-view-full"'
+    assert_includes payload, "Show original error page"
     assert_includes payload, "concise_errors_full=1"
   end
 

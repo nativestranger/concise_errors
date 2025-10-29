@@ -4,11 +4,13 @@ ConciseErrors swaps Rails’ `ActionDispatch::DebugExceptions` middleware with a
 
 ## Features
 
-- Tiny plain-text payloads by default (no inline assets, no copious markup).
-- Optional single-file HTML view optimised for dark/light mode without external CSS.
-- Configurable backtrace depth with an omission indicator.
-- Automatic fallback to `text/plain` when the request is `xhr?` or clients negotiate non-HTML `Accept` headers.
-- HTML view includes a button to open Rails' full-featured error page.
+- Beautiful, minimal error pages with Rails-brand styling and dark code themes
+- Code context showing 3 lines before/after the exception with highlighted error line
+- Formatted stack trace with line numbers
+- Configurable backtrace depth with an omission indicator
+- Automatic fallback to `text/plain` when the request is `xhr?` or clients negotiate non-HTML `Accept` headers
+- "Show original error page" button in development to access Rails' full error page
+- Mobile responsive design
 
 ## Installation
 
@@ -28,30 +30,41 @@ ConciseErrors ships with opinionated defaults — HTML output, no CSS, and Web C
 # config/environments/development.rb
 Rails.application.configure do
   config.concise_errors.tap do |cfg|
-    cfg.stack_trace_lines = 5   # default: 10
-    cfg.format = :html          # available: :text (default) or :html
-    cfg.enabled = true          # flip to false to restore the stock debug page
+    cfg.stack_trace_lines = 10         # default: 10; number of stack trace lines to show
+    cfg.format = :html                 # available: :text or :html (default)
+    cfg.enabled = true                 # flip to false to restore the stock debug page
     cfg.application_root = Rails.root.to_s # optional: trim this prefix from traces
-    cfg.logger = Rails.logger              # optional: reuse your preferred logger
-    cfg.full_error_param = "concise_errors_full" # optional: query param to trigger full page; set nil/"" to disable
+    cfg.logger = Rails.logger          # optional: reuse your preferred logger
+    cfg.enable_in_production = false   # default: false; set true to use in production (see below)
   end
 end
 ```
 
 You can also steer the default format via `ENV["CONCISE_ERRORS_FORMAT"]` (`text` or `html`).
 
-ConciseErrors only affects the debug middleware (the screen you see when `config.consider_all_requests_local` is true). Production 500 pages continue to use whatever `ActionDispatch::ShowExceptions` is configured to serve.
+### Using in Production
 
-### Viewing the full Rails error page
+By default, ConciseErrors only affects the debug middleware (the screen you see when `config.consider_all_requests_local` is true). To enable ConciseErrors in production, add to your production config:
 
-When rendering HTML, ConciseErrors shows a "View full Rails error page" button. Clicking it performs a same-origin request back to the same URL with the `concise_errors_full=1` flag (or your configured `full_error_param`). The original request method, CSRF token, and content type are preserved; for non-GET/HEAD requests the request body is replayed.
+```ruby
+# config/environments/production.rb
+Rails.application.configure do
+  config.concise_errors.enable_in_production = ENV['SHOW_CONCISE_PRODUCTION_ERRORS'] == 'true'
+end
+```
 
-- To disable the button entirely, set `config.concise_errors.full_error_param = nil` or `""`.
-- If Web Console is installed, the fallback will go through its middleware; otherwise Rails' stock `ActionDispatch::DebugExceptions` page is shown.
+Then set the environment variable when needed:
+
+```bash
+SHOW_CONCISE_PRODUCTION_ERRORS=true rails server -e production
+```
+
+When enabled, ConciseErrors will replace the generic "Something went wrong" 500 page with detailed error output including stack traces and code context.
+
 
 ## Sample Output
 
-Plain text format (default):
+**Plain text format:**
 
 ```
 RuntimeError: bang
@@ -62,7 +75,10 @@ app/controllers/widgets_controller.rb:12:in `show'
 ...
 ```
 
-HTML format renders the same content inside a single `<pre>` block with minimal inline styling suitable for AI agents that prefer HTML responses.
+**HTML format** renders a beautiful error page featuring:
+- Exception class and message in a styled red gradient header
+- Code context showing the lines around where the error occurred with the error line highlighted
+- Formatted stack trace with line numbers in a dark theme
 
 ## Development
 

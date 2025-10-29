@@ -7,6 +7,7 @@ require_relative "concise_errors/version"
 require_relative "concise_errors/configuration"
 require_relative "concise_errors/formatter"
 require_relative "concise_errors/debug_exceptions"
+require_relative "concise_errors/show_exceptions"
 
 # ConciseErrors exposes configuration helpers and loads the custom error middleware.
 module ConciseErrors

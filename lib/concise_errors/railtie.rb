@@ -17,6 +17,8 @@ module ConciseErrors
       next unless ConciseErrors.configuration.enabled?
 
       stack = app.config.middleware
+
+      # Swap DebugExceptions for development/local requests
       disable_web_console(stack)
 
       # Ensure ActionDispatch::DebugExceptions exists before trying to swap
@@ -28,6 +30,11 @@ module ConciseErrors
       rescue RuntimeError
         stack.delete ::ActionDispatch::DebugExceptions
         stack.use ConciseErrors::DebugExceptions
+      end
+
+      # Swap ShowExceptions for production errors if enabled
+      if ConciseErrors.configuration.enable_in_production?
+        swap_show_exceptions(stack)
       end
     end
 
@@ -70,6 +77,19 @@ module ConciseErrors
       return unless defined?(WebConsole::Middleware)
 
       stack.delete(WebConsole::Middleware)
+    end
+
+    def swap_show_exceptions(stack)
+      # Ensure ActionDispatch::ShowExceptions exists before trying to swap
+      stack.use ::ActionDispatch::ShowExceptions
+
+      begin
+        stack.swap ::ActionDispatch::ShowExceptions, ConciseErrors::ShowExceptions
+        stack.delete ::ActionDispatch::ShowExceptions
+      rescue RuntimeError
+        stack.delete ::ActionDispatch::ShowExceptions
+        stack.use ConciseErrors::ShowExceptions
+      end
     end
   end
 end
